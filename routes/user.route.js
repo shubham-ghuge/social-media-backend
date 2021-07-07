@@ -10,6 +10,18 @@ const Notification = require('../models/notification.model');
 
 router.route("/")
     .get(authHandler, async (req, res) => {
+        try {
+            const users = await User.find({}).lean();
+            const response = users.map(user => ({ name: user.name, _id: user._id }))
+            res.status(200).json({ success: true, response });
+        } catch (error) {
+            console.log("error in retrieving user data", error);
+            res.json({ success: false, message: "something went wrong while retrieving user data" })
+        }
+    })
+
+router.route('/data')
+    .get(authHandler, async (req, res) => {
         const { userId } = req.user;
         try {
             const response = await User.findById(userId);
@@ -28,7 +40,9 @@ router.route('/followers')
         const { user } = req.body;
         try {
             await User.findByIdAndUpdate(user, { $push: { followers: userId } });
-            await Notification.findByIdAndUpdate(user, { $push: { text: "you followed a new person" } });
+            const data = await Notification.findOneAndUpdate({ _id: userId }, { $push: { text: "you followed a new person" } });
+            console.log(data);
+            await Notification.findOneAndUpdate({ _id: user }, { $push: { text: "somebody followed you person" } });
             res.status(201).json({ success: true, message: "you followed a new person" });
         } catch (error) {
             console.log(error);

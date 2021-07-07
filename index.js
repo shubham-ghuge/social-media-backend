@@ -7,6 +7,7 @@ const userRoute = require('./routes/user.route');
 const postRoute = require('./routes/post.route');
 const notificationRoute = require('./routes/notification.route');
 const commentRoute = require('./routes/comment.route');
+const feedRoute = require('./routes/feed.route');
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
 
@@ -23,6 +24,7 @@ app.use('/users', userRoute);
 app.use('/posts', postRoute);
 app.use('/comments', commentRoute);
 app.use('/notifications', notificationRoute);
+app.use('/feed', feedRoute);
 
 app.use((req, res, next) => {
     res.status(404).json({ success: false, message: "Invalid Route" });

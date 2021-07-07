@@ -12,10 +12,10 @@ router.route('/')
         try {
             const response = await User.findById(userId).populate('posts').exec();
             sanitizeResponse(response, '__v', 'password', 'followers')
-            res.status(200).json({ success: false, message: 'post data', response });
+            res.status(200).json({ success: false, message: 'your all posts', response });
         } catch (error) {
             console.log(error);
-            res.json({ success: false, message: 'error while retrieving post data' });
+            res.json({ success: false, message: 'error while retrieving your posts' });
         }
     })
     .post(authHandler, async (req, res) => {
@@ -25,7 +25,8 @@ router.route('/')
             const response = await Post.create({ text });
             await User.findByIdAndUpdate(userId, { $push: { posts: response._id } });
             await Notification.findOneAndUpdate({ userId }, { $push: { text: 'post is uploaded' } });
-            res.status(201).json({ success: true, postId: response._id, message: 'your posted' });
+            sanitizeResponse(response, "__v", "likes", "comments", "support");
+            res.status(201).json({ success: true, response, message: 'your post is sent' });
         } catch (error) {
             console.log(error);
             res.json({ success: false, message: "error while uploading a post" });

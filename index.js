@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const app = express();
-const port = 3000;
+const port = 3002;
 const { initialiseDbConnection } = require('./db/connection.db');
 const userRoute = require('./routes/user.route');
 const postRoute = require('./routes/post.route');

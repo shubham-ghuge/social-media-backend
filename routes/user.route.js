@@ -40,9 +40,9 @@ router.route('/followers')
         const { user } = req.body;
         try {
             await User.findByIdAndUpdate(user, { $push: { followers: userId } });
-            const data = await Notification.findOneAndUpdate({ _id: userId }, { $push: { text: "you followed a new person" } });
+            const data = await Notification.findOneAndUpdate({ userId }, { $push: { text: "you followed a new person" } });
             console.log(data);
-            await Notification.findOneAndUpdate({ _id: user }, { $push: { text: "somebody followed you person" } });
+            await Notification.findOneAndUpdate({ userId: user }, { $push: { text: "somebody followed you person" } });
             res.status(201).json({ success: true, message: "you followed a new person" });
         } catch (error) {
             console.log(error);

@@ -47,7 +47,7 @@ router.route('/followers')
         const { userId } = req.user;
         const { user } = req.body;
         try {
-            await User.findByIdAndUpdate(user, { $push: { followers: userId } });
+            await User.findByIdAndUpdate(userId, { $push: { followers: user } });
             await Notification.findOneAndUpdate({ userId }, { $push: { text: "you followed a new person" } });
             await Notification.findOneAndUpdate({ userId: user }, { $push: { text: "somebody followed you person" } });
             res.status(201).json({ success: true, message: "you followed a new person" });

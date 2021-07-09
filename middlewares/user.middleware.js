@@ -44,12 +44,12 @@ async function isExistingFollower(req, res, next) {
     const { userId } = req.user;
     const { user } = req.body;
     try {
-        const checkIfFollow = await User.findOne({ _id: user, followers: { $elemMatch: { "$in": userId } } });
-        console.log(checkIfFollow)
-        if (checkIfFollow === null) {
-            next();
-        } else {
+        const userData = await User.findById(userId);
+        const checkIfFollow = userData.followers.includes(user);
+        if (checkIfFollow) {
             res.json({ success: false, message: "you are already following this user" });
+        } else {
+            next();
         }
     } catch (error) {
         console.log(error);

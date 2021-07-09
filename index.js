@@ -27,6 +27,7 @@ app.use('/notifications', notificationRoute);
 app.use('/feed', feedRoute);
 
 app.use((req, res, next) => {
+    console.log(req)
     res.status(404).json({ success: false, message: "Invalid Route" });
 })
 

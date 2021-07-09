@@ -10,9 +10,17 @@ const Notification = require('../models/notification.model');
 
 router.route("/")
     .get(authHandler, async (req, res) => {
+        const { userId } = req.user;
         try {
             const users = await User.find({}).lean();
-            const response = users.map(user => ({ name: user.name, _id: user._id }))
+            const following = await User.findById(userId);
+            const followingArr = following.followers;
+            const response = users.map(user => {
+                if (followingArr.includes(user._id)) {
+                    return { name: user.name, _id: user._id, following: true }
+                }
+                return { name: user.name, _id: user._id, following: false }
+            })
             res.status(200).json({ success: true, response });
         } catch (error) {
             console.log("error in retrieving user data", error);
@@ -20,7 +28,7 @@ router.route("/")
         }
     })
 
-router.route('/data')
+router.route('/profile')
     .get(authHandler, async (req, res) => {
         const { userId } = req.user;
         try {
@@ -40,8 +48,7 @@ router.route('/followers')
         const { user } = req.body;
         try {
             await User.findByIdAndUpdate(user, { $push: { followers: userId } });
-            const data = await Notification.findOneAndUpdate({ userId }, { $push: { text: "you followed a new person" } });
-            console.log(data);
+            await Notification.findOneAndUpdate({ userId }, { $push: { text: "you followed a new person" } });
             await Notification.findOneAndUpdate({ userId: user }, { $push: { text: "somebody followed you person" } });
             res.status(201).json({ success: true, message: "you followed a new person" });
         } catch (error) {

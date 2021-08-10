@@ -5,6 +5,7 @@ const Post = require('../models/post.model');
 const Notification = require('../models/notification.model');
 const { authHandler } = require('../middlewares/auth.middleware');
 const { sanitizeResponse } = require('./utils');
+const Activity = require('../models/activity.model');
 
 router.route('/')
     .get(authHandler, async (req, res) => {
@@ -24,11 +25,11 @@ router.route('/')
         try {
             const response = await Post.create({ text });
             await User.findByIdAndUpdate(userId, { $push: { posts: response._id } });
-            await Notification.findOneAndUpdate({ userId }, { $push: { text: 'your post is sent' } });
+            await Activity.findOneAndUpdate({ userId }, { $push: { text: 'your post is sent' } });
             sanitizeResponse(response, "__v", "likes", "comments", "support");
             res.status(201).json({ success: true, response, message: 'your post is sent' });
         } catch (error) {
-            console.log(errorGET);
+            console.log(error);
             res.json({ success: false, message: "error while uploading a post" });
         }
     })
@@ -49,9 +50,12 @@ router.route('/:postId/likes')
     .post(authHandler, async (req, res) => {
         const { userId } = req.user;
         const { postId } = req.params;
+        const { author } = req.body;
         try {
             await Post.findByIdAndUpdate(postId, { $push: { likes: userId } });
-            await Notification.findOneAndUpdate({ userId }, { $push: { text: 'you liked a post' } });
+            const data1 = await Notification.findOneAndUpdate({ userId: author }, { $push: { notification: { text: "liked your post", userData: userId } } })
+            const data2 = await Activity.findOneAndUpdate({ userId }, { $push: { text: 'you liked a post' } });
+            console.log({ data1, data2 })
             res.status(200).json({ success: true, message: 'you liked a post' });
         } catch (error) {
             console.log(error);
@@ -63,9 +67,11 @@ router.route('/:postId/support')
     .post(authHandler, async (req, res) => {
         const { userId } = req.user;
         const { postId } = req.params;
+        const { author } = req.body;
         try {
             await Post.findByIdAndUpdate(postId, { $push: { support: userId } });
-            await Notification.findOneAndUpdate({ userId }, { $push: { text: 'you supported a post' } });
+            await Notification.findOneAndUpdate({ userId: author }, { $push: { notification: { text: "supported your post", userData:userId } } })
+            await Activity.findOneAndUpdate({ userId }, { $push: { text: 'you supported a post' } });
             res.status(200).json({ success: true, message: 'you supported a post' });
         } catch (error) {
             console.log(error);

@@ -7,6 +7,41 @@ const { isValidLoginData, isValidRegisterData, isExistingFollower } = require('.
 const User = require('../models/user.model');
 const { authHandler } = require('../middlewares/auth.middleware');
 const Notification = require('../models/notification.model');
+const Activity = require('../models/activity.model');
+
+router.route('/register')
+    .post(isValidRegisterData, async (req, res) => {
+        const userDetails = req.body;
+        const { name, email, password } = userDetails;
+        try {
+            const hashedPassword = bcrypt.hashSync(password, salt);
+            const response = await User.create({ name, email, password: hashedPassword });
+            await Activity.create({ userId: response._id });
+            await Notification.create({ userId: response._id });
+            res.status(201).json({ success: true, message: "registration successful" });
+        } catch (error) {
+            console.log("error in registration", error);
+            res.json({ success: false, message: "couldn't register you,please try again!" })
+        }
+    })
+
+router.route('/login')
+    .post(isValidLoginData, async (req, res) => {
+        const { dbPassword, userId, userName } = req.user;
+        const { password } = req.body;
+        try {
+            const isValidUser = bcrypt.compareSync(password, dbPassword);
+            if (isValidUser) {
+                const token = jwt.sign({ userId }, process.env['secret_key'], { expiresIn: '24h' });
+                res.status(200).json({ success: true, message: "user loggin successful", token, userName });
+            } else {
+                res.json({ success: false, message: "That didn't worked, please try again!" })
+            }
+        } catch (error) {
+            console.log("error in login", error);
+            res.json({ success: false, message: "error while logging in" })
+        }
+    })
 
 router.route("/")
     .get(authHandler, async (req, res) => {
@@ -47,48 +82,14 @@ router.route('/followers')
         const { userId } = req.user;
         const { user } = req.body;
         try {
-
-            await User.findByIdAndUpdate(userId, { $push: { followers: user } });/*  */
-            await Notification.findOneAndUpdate({ userId }, { $push: { text: "you followed a new person" } });
-            await Notification.findOneAndUpdate({ userId: user }, { $push: { text: "somebody followed you person" } });
+            await User.findByIdAndUpdate(userId, { $push: { followers: user } });
+            await Activity.findOneAndUpdate({ userId }, { $push: { text: "you followed a new person" } });
+            await Notification.findOneAndUpdate({ userId: user }, { $push: { notification: { text: "followed you", userData: userId } } });
             res.status(201).json({ success: true, message: "you followed a new person" });
         } catch (error) {
             console.log(error);
             res.json({ success: false, message: "Error while updating the follower list" })
         }
     });
-
-router.route('/register')
-    .post(isValidRegisterData, async (req, res) => {
-        const userDetails = req.body;
-        const { name, email, password } = userDetails;
-        try {
-            const hashedPassword = bcrypt.hashSync(password, salt);
-            const response = await User.create({ name, email, password: hashedPassword });
-            await Notification.create({ userId: response._id });
-            res.status(201).json({ success: true, message: "registration successful" });
-        } catch (error) {
-            console.log("error in registration", error);
-            res.json({ success: false, message: "couldn't register you,please try again!" })
-        }
-    })
-
-router.route('/login')
-    .post(isValidLoginData, async (req, res) => {
-        const { dbPassword, userId, userName } = req.user;
-        const { password } = req.body;
-        try {
-            const isValidUser = bcrypt.compareSync(password, dbPassword);
-            if (isValidUser) {
-                const token = jwt.sign({ userId }, process.env['secret_key'], { expiresIn: '24h' });
-                res.status(200).json({ success: true, message: "user loggin successful", token, userName });
-            } else {
-                res.json({ success: false, message: "That didn't worked, please try again!" })
-            }
-        } catch (error) {
-            console.log("error in login", error);
-            res.json({ success: false, message: "error while logging in" })
-        }
-    })
 
 module.exports = router;

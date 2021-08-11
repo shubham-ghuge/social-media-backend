@@ -23,7 +23,7 @@ router.route('/')
         const { userId } = req.user;
         const { text } = req.body;
         try {
-            const response = await Post.create({ text });
+            const response = await Post.create({ text, author: userId });
             await User.findByIdAndUpdate(userId, { $push: { posts: response._id } });
             await Activity.findOneAndUpdate({ userId }, { $push: { text: 'your post is sent' } });
             sanitizeResponse(response, "__v", "likes", "comments", "support");
@@ -51,11 +51,11 @@ router.route('/:postId/likes')
         const { userId } = req.user;
         const { postId } = req.params;
         const { author } = req.body;
+        console.log(author);
         try {
             await Post.findByIdAndUpdate(postId, { $push: { likes: userId } });
-            const data1 = await Notification.findOneAndUpdate({ userId: author }, { $push: { notification: { text: "liked your post", userData: userId } } })
-            const data2 = await Activity.findOneAndUpdate({ userId }, { $push: { text: 'you liked a post' } });
-            console.log({ data1, data2 })
+            await Notification.findOneAndUpdate({ userId: author }, { $push: { notification: { text: "liked your post", userData: userId } } })
+            await Activity.findOneAndUpdate({ userId }, { $push: { text: 'you liked a post' } });
             res.status(200).json({ success: true, message: 'you liked a post' });
         } catch (error) {
             console.log(error);
@@ -70,7 +70,7 @@ router.route('/:postId/support')
         const { author } = req.body;
         try {
             await Post.findByIdAndUpdate(postId, { $push: { support: userId } });
-            await Notification.findOneAndUpdate({ userId: author }, { $push: { notification: { text: "supported your post", userData:userId } } })
+            await Notification.findOneAndUpdate({ userId: author }, { $push: { notification: { text: "supported your post", userData: userId } } })
             await Activity.findOneAndUpdate({ userId }, { $push: { text: 'you supported a post' } });
             res.status(200).json({ success: true, message: 'you supported a post' });
         } catch (error) {

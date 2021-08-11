@@ -3,6 +3,7 @@ const { Schema } = mongoose;
 
 const postSchema = new Schema({
     text: String,
+    author: { type: Schema.Types.ObjectId, ref: 'User' },
     likes: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     comments: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
     support: [{ type: Schema.Types.ObjectId, ref: 'User' }]

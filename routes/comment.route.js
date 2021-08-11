@@ -13,7 +13,7 @@ router.route('/')
         try {
             const response = await Comment.create({ text, userId })
             await Post.findByIdAndUpdate(postId, { $push: { comments: response._id } });
-            await Notification.findOneAndUpdate({ userId: author }, { $push: { notification: { text: "left a comment on your post", userData:userId } } });
+            await Notification.findOneAndUpdate({ userId: author }, { $push: { notification: { text: "left a comment on your post", userData: userId } } });
             await Activity.findOneAndUpdate({ userId }, { $push: { text: "you commented on a post" } });
             res.json({ success: true, message: "you commented on a post" });
         } catch (error) {

@@ -48,7 +48,7 @@ async function isExistingFollower(req, res, next) {
         const checkIfFollow = userData.followers.includes(user);
         if (checkIfFollow) {
             await User.findByIdAndUpdate(userId, { $pull: { followers: user } });/*  */
-            res.json({ success: false, message: "you unfollowed user" });
+            res.json({ success: true, message: "you unfollowed user" });
         } else {
             next();
         }
